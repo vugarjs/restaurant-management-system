@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="RestorantApp.Businnes/RestorantApp.Businnes.csproj" />
+    <Project Path="RestorantApp.DataAccess/RestorantApp.DataAccess.csproj" />
+    <Project Path="RestorantApp.Entity/RestorantApp.Entity.csproj" />
+    <Project Path="RestorantApp.Presentation/RestorantApp.Presentation.csproj" />
+  </Folder>
+</Solution>

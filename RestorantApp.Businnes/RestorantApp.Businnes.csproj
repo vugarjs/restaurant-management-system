@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RestorantApp.DataAccess\RestorantApp.DataAccess.csproj" />
+    <ProjectReference Include="..\RestorantApp.Entity\RestorantApp.Entity.csproj" />
+  </ItemGroup>
+
+</Project>
