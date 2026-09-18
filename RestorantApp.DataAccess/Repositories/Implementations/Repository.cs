@@ -15,14 +15,21 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         _context = context;
         _dbSet = context.Set<T>();
     }
+    public async Task AddAsync(T entity)
+    {
+        await _dbSet.AddAsync(entity);
 
-    public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
+        return;
+    }
     public void Remove(int id)
     {
-        var entity = _dbSet.Find(id);
+        var entity = _context.Orders
+         .Include(o => o.OrderItems) // Əgər əlaqəli item-lar da silinməlidirsə
+         .FirstOrDefault(o => o.Id == id);
+
         if (entity != null)
         {
-            _dbSet.Remove(entity);
+            _context.Remove(entity);
         }
     }
     public async Task<List<T>> GetAllAsync() => await _dbSet.ToListAsync();
@@ -40,6 +47,17 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     public Task<T> Get(Expression<Func<T, bool>>? predicate)
     {
         return _dbSet.FirstOrDefaultAsync(predicate!)!;
+    }
+
+
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _context.SaveChangesAsync();
+    }
+
+    public async Task<T> FindSingleAsync(Expression<Func<T, bool>>? predicate)
+    {
+        return await _dbSet.FirstOrDefaultAsync(predicate!)!;
     }
 }
 

@@ -1,54 +1,94 @@
-﻿using RestorantApp.Businnes.Services.Interfaces;
+﻿using AutoMapper;
+using RestorantApp.Businnes.DTOs.MenuItemDtos;
+using RestorantApp.Businnes.Services.Interfaces;
+using RestorantApp.DataAccess.Context;
 using RestorantApp.DataAccess.Repositories.Interfaces;
 using RestorantApp.Entity.Entities;
 using RestorantApp.Entity.Enums;
 
 namespace RestorantApp.Businnes.Services.Implementations;
 
-internal class MenuItemService : IMenuItemService
+public class MenuItemService : IMenuItemService
 {
     private readonly IMenuItemRepository _menuItemRepository;
-    public MenuItemService(IMenuItemRepository menuItemRepository)
+    private readonly RestorantContext _context;
+    private readonly IMapper _mapper;
+    public MenuItemService(IMenuItemRepository menuItemRepository, RestorantContext context, IMapper mapper)
     {
         _menuItemRepository = menuItemRepository;
+        _context = context;
+        _mapper = mapper;
     }
-    public void CreateMenuItemAsync(MenuItem menuItem)
+    public async Task AddMenuItemAsync(MenuItemCreateDto menuItemdto)
     {
-        _menuItemRepository.AddAsync(menuItem);
+
+        var menuItem = _mapper.Map<MenuItem>(menuItemdto); // 
+
+        var existingItem = await _menuItemRepository.FindSingleAsync(x => x.Name == menuItem.Name);
+
+        if (existingItem != null)
+            throw new Exception("Menu item with the same name already exists.");
+
+        await _menuItemRepository.AddAsync(menuItem);
+        return;
     }
 
-    public void DeleteMenuItemAsync(int menuItemId)
+    public void RemoveMenuItem(int menuItemId)
     {
         _menuItemRepository.Remove(menuItemId);
     }
 
-    public async Task<IEnumerable<MenuItem>> GetAllMenuItemsAsync()
+    public async Task<IEnumerable<MenuItemReturnDto>> GetAllMenuItemsAsync()
     {
-        return await _menuItemRepository.GetAllAsync();
+        var menuItems = await _menuItemRepository.GetAllAsync();
+        return _mapper.Map<IEnumerable<MenuItemReturnDto>>(menuItems);
     }
 
-    public async Task<MenuItem> GetMenuItemByIdAsync(int menuItemId)
+    public async Task<MenuItemReturnDto> GetMenuItemByIdAsync(int menuItemId)
     {
-        return await _menuItemRepository.Get(x => x.Id == menuItemId);
+        var menu = await _menuItemRepository.FindSingleAsync(x => x.Id == menuItemId);
+
+        return _mapper.Map<MenuItemReturnDto>(menu);
     }
 
-    public async Task<IEnumerable<MenuItem>> GetMenuItemsByCategoryAsync(Category category)
+    public async Task<IEnumerable<MenuItemReturnDto>> GetMenuItemsByCategoryAsync(Category category)
     {
-        return await _menuItemRepository.GetMenuItemsByCategoryAsync(category);
+        var menuItems = await _menuItemRepository.GetMenuItemsByCategoryAsync(category);
+        return _mapper.Map<IEnumerable<MenuItemReturnDto>>(menuItems);
     }
 
-    public async Task<IEnumerable<MenuItem>> GetMenuItemsByNameAsync(string name)
+    public async Task<IEnumerable<MenuItemReturnDto>> GetMenuItemsByNameAsync(string name)
     {
-        return await _menuItemRepository.SearchByNameAsync(name);
+        var menuItems = await _menuItemRepository.SearchByNameAsync(name);
+        return _mapper.Map<IEnumerable<MenuItemReturnDto>>(menuItems);
     }
 
-    public async Task<IEnumerable<MenuItem>> GetMenuItemsByPriceRangeAsync(decimal minPrice, decimal maxPrice)
+    public async Task<IEnumerable<MenuItemReturnDto>> GetMenuItemsByPriceRangeAsync(decimal minPrice, decimal maxPrice)
     {
-        return await _menuItemRepository.PriceBetweenAsync(minPrice, maxPrice);
+        var menuItems = await _menuItemRepository.PriceBetweenAsync(minPrice, maxPrice);
+
+
+        return _mapper.Map<IEnumerable<MenuItemReturnDto>>(menuItems);
     }
 
-    public void UpdateMenuItemAsync(MenuItem menuItem)
+    public async Task EditMenuItem(int id, MenuItemUpdateDto updateDto)
     {
-        _menuItemRepository.Update(menuItem);
+        if (id == updateDto.Id)
+        {
+            var menuItem = await _menuItemRepository.FindSingleAsync(x => x.Id == id);
+            if (menuItem == null)
+                throw new Exception("Menu item not found.");
+            _mapper.Map(updateDto, menuItem);
+            _menuItemRepository.Update(menuItem);
+        }
+        else
+        {
+            throw new Exception("Menu item ID mismatch.");
+        }
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _menuItemRepository.SaveChangesAsync();
     }
 }
