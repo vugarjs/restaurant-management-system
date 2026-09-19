@@ -23,16 +23,29 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     }
     public void Remove(int id)
     {
-        var entity = _context.Orders
-         .Include(o => o.OrderItems) // Əgər əlaqəli item-lar da silinməlidirsə
-         .FirstOrDefault(o => o.Id == id);
-
+        var entity = _dbSet.Find(id);
         if (entity != null)
         {
-            _context.Remove(entity);
+            _dbSet.Remove(entity);
         }
     }
-    public async Task<List<T>> GetAllAsync() => await _dbSet.ToListAsync();
+    public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null,
+        Func<IQueryable<T>, IQueryable<T>>? include = null,
+        bool disableTracking = true)
+    {
+        IQueryable<T> query = _dbSet;
+        if (disableTracking)
+            query = query.AsNoTracking();
+
+        // Əgər include verilibsə, sorğuya əlavə edirik
+        if (include != null)
+            query = include(query);
+
+        if (predicate != null)
+            query = query.Where(predicate);
+
+        return await query.ToListAsync();
+    }
 
     public void Update(T entity)
     {

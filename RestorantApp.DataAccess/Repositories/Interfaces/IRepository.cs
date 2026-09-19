@@ -9,7 +9,9 @@ public interface IRepository<T> where T : BaseEntity
     Task<T> FindSingleAsync(Expression<Func<T, bool>>? predicate);
     Task AddAsync(T entity);
     void Remove(int id);
-    Task<List<T>> GetAllAsync();
+    Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null,
+        Func<IQueryable<T>, IQueryable<T>>? include = null,
+        bool disableTracking = true);
     Task<T> Get(Expression<Func<T, bool>>? predicate);
     void Update(T entity);
     Task<int> SaveChangesAsync();

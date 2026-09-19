@@ -65,7 +65,7 @@ public class OrderService : IOrderService
 
     public async Task<Order?> GetOrderByIdAsync(int orderId)
     {
-        var order = await _orderRepository.FindSingleAsync(x => x.Id == orderId);
+        Order order = await _orderRepository.FindSingleAsync(x => x.Id == orderId);
         return order;
     }
 

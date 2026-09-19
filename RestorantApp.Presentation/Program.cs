@@ -32,6 +32,10 @@ namespace RestorantApp.Presentation
 
             services.AddAutoMapper(cfg => { }, typeof(MapperProfile).Assembly);
             services.AddLogging();
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+            // Əgər ayrıca IOrderRepository / OrderRepository istifadə edirsənsə, onu da qeydiyyatdan keçirməlisən:
+            services.AddScoped<IOrderRepository, OrderRepository>();
 
             var provider = services.BuildServiceProvider();
             var mapper = provider.GetRequiredService<IMapper>();
@@ -129,6 +133,14 @@ namespace RestorantApp.Presentation
                                 Console.WriteLine("Yanlış kateqoriya daxil edildi!");
 
                             }
+                            break;
+                        case "3":
+                            Console.Write("Silinəcək Məhsulun ID-si: ");
+                            var deleteId = int.Parse(Console.ReadLine()!);
+
+                            menuItemService.RemoveMenuItem(deleteId);
+                            await menuItemService.SaveChangesAsync();
+                            Console.WriteLine("Məhsul uğurla silindi!");
                             break;
 
                         case "2":
@@ -344,19 +356,35 @@ namespace RestorantApp.Presentation
 
                         case "6":
                             Console.Write("Tarix daxil edin (YYYY-MM-DD): ");
-                            DateTime.TryParse(Console.ReadLine(), out DateTime targetDate);
-                            var exactDateOrders = await orderService.GetOrderByDateAsync(targetDate);
-                            foreach (var o in exactDateOrders)
+                            if (DateTime.TryParse(Console.ReadLine(), out DateTime targetDate))
                             {
-                                Console.WriteLine($"ID: {o.Id} | Tarix: {o.Date} | Məbləğ: {o.TotalAmount} AZN");
+                                var exactDateOrders = await orderService.GetOrderByDateAsync(targetDate);
+
+                                if (!exactDateOrders.Any())
+                                {
+                                    Console.WriteLine("Bu tarixə uyğun sifariş tapılmadı.");
+                                }
+                                else
+                                {
+                                    foreach (var o in exactDateOrders)
+                                    {
+                                        Console.WriteLine($"ID: {o.Id} | Tarix: {o.Date} | Məbləğ: {o.TotalAmount} AZN");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Düzgün tarix formatı daxil edilmədi! (Məsələn: 2026-09-18)");
                             }
                             break;
 
                         case "7":
                             Console.Write("Sifariş ID-si: ");
+
                             if (int.TryParse(Console.ReadLine(), out int orderId))
                             {
                                 var order = await orderService.GetOrderByIdAsync(orderId);
+
                                 if (order != null)
                                 {
                                     Console.WriteLine($"Sifariş ID: {order.Id} | Tarix: {order.Date} | Məbləğ: {order.TotalAmount} AZN");
