@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Caching.Memory;
 using RestorantApp.Businnes.DTOs.MenuItemDtos;
 using RestorantApp.Businnes.Services.Interfaces;
 using RestorantApp.DataAccess.Context;
@@ -13,22 +14,18 @@ public class MenuItemService : IMenuItemService
     private readonly IMenuItemRepository _menuItemRepository;
     private readonly RestorantContext _context;
     private readonly IMapper _mapper;
-    public MenuItemService(IMenuItemRepository menuItemRepository, RestorantContext context, IMapper mapper)
+    private readonly IMemoryCache _memoryCache;
+    public MenuItemService(IMenuItemRepository menuItemRepository, RestorantContext context, IMapper mapper, IMemoryCache memoryCache)
     {
         _menuItemRepository = menuItemRepository;
         _context = context;
         _mapper = mapper;
+        _memoryCache = memoryCache;
     }
     public async Task AddMenuItemAsync(MenuItemCreateDto menuItemdto)
     {
 
-        var menuItem = _mapper.Map<MenuItem>(menuItemdto); // 
-
-        var existingItem = await _menuItemRepository.FindSingleAsync(x => x.Name == menuItem.Name);
-
-        if (existingItem != null)
-            throw new Exception("Menu item with the same name already exists.");
-
+        var menuItem = _mapper.Map<MenuItem>(menuItemdto);
         await _menuItemRepository.AddAsync(menuItem);
         return;
     }
@@ -46,9 +43,15 @@ public class MenuItemService : IMenuItemService
 
     public async Task<MenuItemReturnDto> GetMenuItemByIdAsync(int menuItemId)
     {
-        var menu = await _menuItemRepository.FindSingleAsync(x => x.Id == menuItemId);
+        string cacheKey = $"MenuItem_{menuItemId}";
+        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
 
-        return _mapper.Map<MenuItemReturnDto>(menu);
+            var menu = await _menuItemRepository.FindSingleAsync(x => x.Id == menuItemId);
+
+            return _mapper.Map<MenuItemReturnDto>(menu);
+        });
     }
 
     public async Task<IEnumerable<MenuItemReturnDto>> GetMenuItemsByCategoryAsync(Category category)

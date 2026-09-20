@@ -34,11 +34,15 @@ namespace RestorantApp.Presentation
             services.AddLogging();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-            // Əgər ayrıca IOrderRepository / OrderRepository istifadə edirsənsə, onu da qeydiyyatdan keçirməlisən:
+
+            services.AddMemoryCache(); // caching üçün əlavə olunur
+
             services.AddScoped<IOrderRepository, OrderRepository>();
 
             var provider = services.BuildServiceProvider();
             var mapper = provider.GetRequiredService<IMapper>();
+
+
 
 
             var menuItemService = provider.GetRequiredService<IMenuItemService>();
@@ -64,7 +68,7 @@ namespace RestorantApp.Presentation
                         await MenuItemMenu(menuItemService, mapper);
                         break;
                     case "2":
-                        await OrderMenu(orderService);
+                        await OrderMenu(orderService, mapper);
                         break;
                     case "0":
                         Console.WriteLine("Proqramdan çıxılır...");
@@ -90,6 +94,7 @@ namespace RestorantApp.Presentation
                 Console.WriteLine("5. Kateqoriyasına görə menu item-ları göstər");
                 Console.WriteLine("6. Qiymət aralığına görə menu item-ları göstər");
                 Console.WriteLine("7. Ada görə axtarış et (Search)");
+                Console.WriteLine("8. ID görə axtarış et (Search)");
                 Console.WriteLine("0. Ana menyuya qayıt");
                 Console.Write("Seçiminizi edin: ");
 
@@ -230,6 +235,20 @@ namespace RestorantApp.Presentation
                             }
                             break;
 
+                        case "8":
+                            Console.Write("Axtarış üçün ID daxil edin: ");
+                            int.TryParse(Console.ReadLine(), out int id);
+                            var idItem = await menuItemService.GetMenuItemByIdAsync(id);
+                            if (idItem != null)
+                            {
+                                Console.WriteLine($"Ad: {idItem.Name} | Qiymət: {idItem.Price} AZN");
+                            }
+                            else
+                            {
+                                Console.WriteLine("İstənilən ID ilə item tapılmadı.");
+                            }
+                            break;
+
                         case "0":
                             return;
 
@@ -247,9 +266,7 @@ namespace RestorantApp.Presentation
                 Console.ReadKey();
             }
         }
-
-        // 2. SİFARİŞ ƏMƏLİYYATLARI
-        static async Task OrderMenu(IOrderService orderService)
+        static async Task OrderMenu(IOrderService orderService, IMapper mapper)
         {
             while (true)
             {
@@ -274,39 +291,43 @@ namespace RestorantApp.Presentation
                     {
                         case "1":
                             var orderCreateDto = new OrderCreateDto();
-                            bool addingItems = true;
 
-                            while (addingItems)
+                            while (true)
                             {
                                 Console.Write("Sifariş veriləcək Məhsulun ID-si (Bitirmək üçün 0 yazın): ");
-                                int.TryParse(Console.ReadLine(), out int menuItemId);
-                                if (menuItemId == 0) break;
+
+                                if (!int.TryParse(Console.ReadLine(), out int menuItemId) || menuItemId == 0)
+                                    break;
 
                                 Console.Write("Sayını daxil edin: ");
-                                int.TryParse(Console.ReadLine(), out int count);
 
-                                orderCreateDto.OrderItems.Add(new OrderItemCreateDto
+                                if (!int.TryParse(Console.ReadLine(), out int count) || count <= 0)
+                                {
+                                    Console.WriteLine("Say düzgün daxil edilmədi.");
+                                    continue;
+                                }
+
+                                var orderItemDto = new OrderItemCreateDto
                                 {
                                     MenuItemId = menuItemId,
                                     Count = count
-                                });
+                                };
 
-
+                                orderCreateDto.OrderItems.Add(orderItemDto);
 
                                 Console.WriteLine("Məhsul səbətə əlavə edildi.");
-                                await orderService.SaveChangesAsync();
-
                             }
 
                             if (orderCreateDto.OrderItems.Count > 0)
                             {
+
                                 await orderService.AddOrderAsync(orderCreateDto)!;
                                 await orderService.SaveChangesAsync();
-                                Console.WriteLine("Sifariş uğurla yaradıldı!");
+                                Console.WriteLine("Sifariş uğurla tamamlandı!");
                             }
                             else
                             {
-                                Console.WriteLine("Heç bir məhsul seçilmədi, sifariş ləğv edildi.");
+                                Console.WriteLine("Səbət boşdur, sifariş yaradılmadı.");
                             }
                             break;
 
@@ -379,22 +400,27 @@ namespace RestorantApp.Presentation
                             break;
 
                         case "7":
-                            Console.Write("Sifariş ID-si: ");
-
+                            Console.WriteLine("ID Daxil edin: ");
                             if (int.TryParse(Console.ReadLine(), out int orderId))
                             {
                                 var order = await orderService.GetOrderByIdAsync(orderId);
-
                                 if (order != null)
                                 {
-                                    Console.WriteLine($"Sifariş ID: {order.Id} | Tarix: {order.Date} | Məbləğ: {order.TotalAmount} AZN");
-                                    Console.WriteLine("Məhsullar:");
+                                    Console.WriteLine($"ID: {order.Id} | Tarix: {order.Date} | Məbləğ: {order.TotalAmount} AZN");
                                     foreach (var item in order.OrderItems)
                                     {
-                                        Console.WriteLine($" - Məhsul: {item.MenuItem.Name} | Say: {item.Count}");
+                                        Console.WriteLine($"Ad: {item.MenuItem.Name} | Miqdar: {item.Count} | Qiymət: {item.MenuItem.Price} AZN");
                                     }
                                 }
-                                else Console.WriteLine("Sifariş tapılmadı.");
+
+                                else
+                                {
+                                    Console.WriteLine("Sifariş tapılmadı.");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Düzgün ID daxil edilmədi!");
                             }
                             break;
 

@@ -2,7 +2,9 @@
 
 namespace RestorantApp.Businnes.DTOs.OrderDtos;
 
+
+
 public class OrderCreateDto
 {
-    public List<OrderItemCreateDto> OrderItems { get; set; } = new();
+    public List<OrderItemCreateDto> OrderItems { get; set; } = new List<OrderItemCreateDto>();
 }

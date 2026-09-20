@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using RestorantApp.Businnes.DTOs.OrderDtos;
 using RestorantApp.Businnes.Services.Interfaces;
 using RestorantApp.DataAccess.Context;
@@ -12,11 +14,13 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly RestorantContext _context;
     private readonly IMapper _mapper;
-    public OrderService(IOrderRepository orderRepository, IMapper mapper, RestorantContext restorantContext)
+    private readonly IMemoryCache _memoryCache;
+    public OrderService(IOrderRepository orderRepository, IMapper mapper, RestorantContext restorantContext, IMemoryCache memoryCache)
     {
         _orderRepository = orderRepository;
         _mapper = mapper;
         _context = restorantContext;
+        _memoryCache = memoryCache;
     }
     public async Task? AddOrderAsync(OrderCreateDto createDto)
     {
@@ -37,7 +41,7 @@ public class OrderService : IOrderService
         // Hesablanmış ümumi məbləği sifarişə təyin edirik
         order.TotalAmount = totalAmount;
 
-        await _orderRepository.AddAsync(order);
+        _memoryCache.Remove("AllOrders");
         await _orderRepository.AddAsync(order);
 
         return;
@@ -49,34 +53,66 @@ public class OrderService : IOrderService
         {
             return false;
         }
+
+        _memoryCache.Remove($"Order_{orderId}");
+        _memoryCache.Remove("AllOrders");
         _orderRepository.Remove(orderId);
         return true;
     }
 
     public async Task<IEnumerable<Order>> GetAllOrdersAsync()
     {
-        return await _orderRepository.GetAllAsync();
+        var cacheKey = "AllOrders";
+        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+          {
+              return await _orderRepository.GetAllAsync(
+         include: query => query.Include(o => o.OrderItems)
+             .ThenInclude(oi => oi.MenuItem)
+         );
+          });
     }
 
     public async Task<IEnumerable<Order>> GetOrderByDateAsync(DateTime date)
     {
-        return await _orderRepository.GetOrderByDateAsync(date);
+        var cacheKey = $"Orders_{date.ToShortDateString()}";
+        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            return await _orderRepository.GetOrderByDateAsync(date);
+        });
     }
 
-    public async Task<Order?> GetOrderByIdAsync(int orderId)
+    public async Task<Order> GetOrderByIdAsync(int orderId)
     {
-        Order order = await _orderRepository.FindSingleAsync(x => x.Id == orderId);
-        return order;
+        string cacheKey = $"Order_{orderId}";
+
+        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            var order = await _orderRepository.FindSingleAsync(
+              predicate: x => x.Id == orderId,
+              include: query => query.Include(o => o.OrderItems)
+                       .ThenInclude(oi => oi.MenuItem)
+              );
+            return order;
+
+        });
     }
 
     public async Task<IEnumerable<Order>> GetOrdersByDatesInterval(DateTime startDate, DateTime endDate)
     {
-        return await _orderRepository.GetOrdersByDatesInterval(startDate, endDate);
+        var cacheKey = $"Orders_{startDate.ToShortDateString()}_{endDate.ToShortDateString()}";
+        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            return await _orderRepository.GetOrdersByDatesInterval(startDate, endDate);
+        });
     }
 
     public async Task<IEnumerable<Order>> GetOrdersByPriceInterval(decimal minPrice, decimal maxPrice)
     {
-        return await _orderRepository.GetOrdersByPriceInterval(minPrice, maxPrice);
+        var cacheKey = $"Orders_{minPrice}_{maxPrice}";
+        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            return await _orderRepository.GetOrdersByPriceInterval(minPrice, maxPrice);
+        });
     }
 
     public async Task SaveChangesAsync()
@@ -86,6 +122,8 @@ public class OrderService : IOrderService
 
     public void UpdateOrder(Order order)
     {
+        _memoryCache.Remove($"Order_{order.Id}");
+        _memoryCache.Remove("AllOrders");
         _orderRepository.Update(order);
 
     }

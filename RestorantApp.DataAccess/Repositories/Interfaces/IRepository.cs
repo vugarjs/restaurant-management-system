@@ -6,7 +6,8 @@ namespace RestorantApp.DataAccess.Repositories.Interfaces;
 public interface IRepository<T> where T : BaseEntity
 {
     Task<List<T>> FindAsync(Expression<Func<T, bool>>? predicate);
-    Task<T> FindSingleAsync(Expression<Func<T, bool>>? predicate);
+    Task<T> FindSingleAsync(Expression<Func<T, bool>>? predicate, Func<IQueryable<T>, IQueryable<T>>? include = null,
+        bool disableTracking = true);
     Task AddAsync(T entity);
     void Remove(int id);
     Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null,

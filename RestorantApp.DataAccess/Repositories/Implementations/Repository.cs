@@ -68,9 +68,13 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         return await _context.SaveChangesAsync();
     }
 
-    public async Task<T> FindSingleAsync(Expression<Func<T, bool>>? predicate)
+    public async Task<T> FindSingleAsync(Expression<Func<T, bool>>? predicate, Func<IQueryable<T>, IQueryable<T>>? include = null, bool disableTracking = true)
     {
-        return await _dbSet.FirstOrDefaultAsync(predicate!)!;
+        IQueryable<T> query = _context.Set<T>();
+        if (include != null)
+            query = include(query);
+
+        return await query.FirstOrDefaultAsync(predicate);
     }
 }
 
