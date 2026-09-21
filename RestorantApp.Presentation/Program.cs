@@ -139,14 +139,6 @@ namespace RestorantApp.Presentation
 
                             }
                             break;
-                        case "3":
-                            Console.Write("Silinəcək Məhsulun ID-si: ");
-                            var deleteId = int.Parse(Console.ReadLine()!);
-
-                            menuItemService.RemoveMenuItem(deleteId);
-                            await menuItemService.SaveChangesAsync();
-                            Console.WriteLine("Məhsul uğurla silindi!");
-                            break;
 
                         case "2":
                             Console.Write("Düzəliş ediləcək Məhsulun ID-si: ");
@@ -168,6 +160,7 @@ namespace RestorantApp.Presentation
                                 var updateDto = mapper.Map<MenuItemUpdateDto>(item);
 
                                 await menuItemService.EditMenuItem(upid, updateDto);
+                                await menuItemService.SaveChangesAsync();
 
                                 Console.WriteLine("Məhsul bazada uğurla yeniləndi!");
                             }
@@ -179,13 +172,21 @@ namespace RestorantApp.Presentation
 
 
                             break;
+                        case "3":
+                            Console.Write("Silinəcək Məhsulun ID-si: ");
+                            var deleteId = int.Parse(Console.ReadLine()!);
+
+                            menuItemService.RemoveMenuItem(deleteId);
+                            await menuItemService.SaveChangesAsync();
+                            Console.WriteLine("Məhsul uğurla silindi!");
+                            break;
 
                         case "4":
                             Console.WriteLine("--- Bütün Menyu Elementləri ---");
                             var items = await menuItemService.GetAllMenuItemsAsync();
                             foreach (var i in items)
                             {
-                                Console.WriteLine($"Ad: {i.Name} | Kateqoriya: {i.Category} | Qiymət: {i.Price} AZN");
+                                Console.WriteLine($"ID {i.Id} | Ad: {i.Name} | Kateqoriya: {i.Category} | Qiymət: {i.Price} AZN");
                             }
                             break;
 
@@ -257,9 +258,9 @@ namespace RestorantApp.Presentation
                             break;
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Console.WriteLine($"XƏTA: {ex.Message}");
+                    Console.WriteLine($"XƏTA: Bash verdi zehmet olmasa admine muraciet edin.");
                 }
 
                 Console.WriteLine("\nDavam etmək üçün hər hansı bir düyməyə basın...");
@@ -432,9 +433,9 @@ namespace RestorantApp.Presentation
                             break;
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Console.WriteLine($"XƏTA: {ex.Message}");
+                    Console.WriteLine("XƏTA: Bash verdi zehmet olmasa admine muraciet edin.");
                 }
 
                 Console.WriteLine("\nDavam etmək üçün hər hansı bir düyməyə basın...");

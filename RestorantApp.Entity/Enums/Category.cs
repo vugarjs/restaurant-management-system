@@ -2,9 +2,9 @@
 
 public enum Category
 {
-    Food = 1,
-    Soup,
-    Drink,
+    Yemek = 1,
+    Sorba,
+    Icki,
     Dessert,
 
 }
