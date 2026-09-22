@@ -10,7 +10,7 @@ public class RestorantContext : DbContext
     public DbSet<MenuItem> MenuItems { get; set; }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var stringConnection = "Data Source=localhost\\SQLEXPRESS;Database=RestorantDB;Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False;Command Timeout=30";
+        var stringConnection = "Server=JUPITER06\\MAIN;Database=RestorantAppDb;Trusted_Connection=True;TrustServerCertificate=True;";
         optionsBuilder.UseSqlServer(stringConnection);
         base.OnConfiguring(optionsBuilder);
 

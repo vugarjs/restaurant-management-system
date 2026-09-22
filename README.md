@@ -1,148 +1,521 @@
-# Restaurant Management System
+# 🍽️ Restaurant Management System
 
-A **.NET 10 console-based Restaurant Management System** built with a clean **N-Tier Architecture**.  
-The application provides an interactive menu-driven experience for managing restaurant menu items and customer orders, with a strong focus on separation of concerns, maintainability, and asynchronous data access.
+A **.NET 10 console-based Restaurant Management System** built with a clean **4-layer N-Tier Architecture**.
+
+The project is designed as a practical application for managing restaurant menu items and customer orders while demonstrating important .NET concepts such as **Entity Framework Core, Repository Pattern, Dependency Injection, DTOs, AutoMapper, and asynchronous programming**.
 
 ---
 
-## Architecture & Layer Structure
+## 📌 Overview
 
-This solution follows a **4-layer N-Tier architecture**:
+The application provides an interactive, menu-driven console interface for managing:
+
+* 🍔 Menu Items
+* 🧾 Orders
+* 📦 Order Items
+* 🔎 Advanced searching and filtering
+* 💰 Automatic order total calculation
+* 🕒 Automatic order timestamps
+
+The main goal of the project is to demonstrate how a maintainable .NET application can be structured using **separation of concerns** and layered architecture.
+
+---
+
+## 🏗️ Architecture
+
+The solution follows a **4-layer N-Tier Architecture**:
+
+```text
+┌──────────────────────────────┐
+│     Presentation Layer       │
+│       Console Application    │
+└──────────────┬───────────────┘
+               │
+┌──────────────▼───────────────┐
+│       Business Layer         │
+│   Services • DTOs • Mapping  │
+└──────────────┬───────────────┘
+               │
+┌──────────────▼───────────────┐
+│      DataAccess Layer        │
+│ EF Core • Repositories       │
+└──────────────┬───────────────┘
+               │
+┌──────────────▼───────────────┐
+│        Entity Layer          │
+│   Domain Models / Entities   │
+└──────────────────────────────┘
+```
 
 ### 1. Presentation Layer
-- Console application with an interactive menu system
-- Handles all user input/output operations
-- Uses **Dependency Injection** to resolve services
-- Acts as the entry point of the application
+
+Responsible for interaction with the user.
+
+**Responsibilities:**
+
+* Console menu system
+* User input/output
+* Application entry point
+* Dependency Injection configuration
+* Calling business services
+
+**Project:**
+
+```text
+RestorantApp.Presentation
+```
+
+---
 
 ### 2. Business Layer
-- Contains the application's business logic
-- Includes:
-  - Services
-  - DTOs
-  - AutoMapper profiles
-- Responsible for validation, orchestration, and data transformation
+
+Contains the application's business logic and application-level operations.
+
+**Responsibilities:**
+
+* Business rules
+* Validation
+* Service implementations
+* DTOs
+* AutoMapper profiles
+* Coordination between repositories and presentation
+
+**Project:**
+
+```text
+RestorantApp.Businnes
+```
+
+---
 
 ### 3. DataAccess Layer
-- Handles persistence and database access
-- Built with **Entity Framework Core**
-- Contains:
-  - `DbContext`
-  - Repository pattern implementations
-- Includes an overridden `SaveChangesAsync()` method for automatic timestamping of new orders
+
+Responsible for communication with the database.
+
+Built using **Entity Framework Core** and the **Repository Pattern**.
+
+**Contains:**
+
+* `DbContext`
+* Repository implementations
+* Database configurations
+* Entity Framework Core operations
+* Automatic order timestamp handling
+
+**Project:**
+
+```text
+RestorantApp.DataAccess
+```
+
+---
 
 ### 4. Entity Layer
-- Contains the core domain models
-- Includes entities such as:
-  - `Order`
-  - `OrderItem`
-  - `MenuItem`
+
+Contains the core domain models used throughout the application.
+
+**Main entities:**
+
+* `MenuItem`
+* `Order`
+* `OrderItem`
+
+**Project:**
+
+```text
+RestorantApp.Entity
+```
 
 ---
 
-## Tech Stack & Libraries
+# 🚀 Features
 
-- **.NET 10**
-- **C#**
-- **Console Application**
-- **Entity Framework Core 10**
-- **SQL Server**
-- **AutoMapper**
-- **Microsoft.Extensions.DependencyInjection**
-- **Asynchronous programming** with `async/await`
+## 🍔 Menu Item Management
 
-### Main Projects
-- `RestorantApp.Presentation`
-- `RestorantApp.Businnes`
-- `RestorantApp.DataAccess`
-- `RestorantApp.Entity`
+Complete CRUD functionality for restaurant menu items.
 
----
+### Supported operations
 
-## Key Features & Implementation Details
+* Create menu item
+* Update menu item
+* Delete menu item
+* Get menu item by ID
+* Get all menu items
 
-### MenuItem Management
-- Full CRUD support for menu items
-- Search menu items by:
-  - ID
-  - Name
-  - Category
-  - Price range
+### Search & Filtering
 
-### Order Management
-- Full CRUD support for orders
-- Query orders by:
-  - Date
-  - Date range
-  - Price range
+Menu items can be searched or filtered by:
 
-### Dependency Injection
-- Implemented using `Microsoft.Extensions.DependencyInjection`
-- Services and repositories are registered in the console startup pipeline
-
-### AutoMapper Integration
-- Used to map between:
-  - Entities
-  - Create DTOs
-  - Update DTOs
-  - Return DTOs
-
-### Automatic Timestamping
-- New `Order` records receive a timestamp automatically
-- Handled in `RestorantContext.SaveChangesAsync()`
-- Uses `DateTime.Now`
-
-### Automatic Total Calculation
-- Order total price is calculated automatically
-- Based on:
-  - Selected menu items
-  - Item quantities
-- Ensures consistent and centralized order pricing logic
-
-### Async/Await Everywhere
-- Repository and service operations are implemented asynchronously
-- Improves responsiveness and keeps data access patterns modern and scalable
+* ID
+* Name
+* Category
+* Price range
 
 ---
 
-## How to Run / Setup Instructions
+## 🧾 Order Management
 
-### Prerequisites
-- **.NET 10 SDK**
-- **SQL Server Express** or another compatible SQL Server instance
-- Visual Studio 2026 or a compatible .NET IDE
+Orders can be created, updated, deleted and queried through the application.
 
-### Database Configuration
-The database connection string is configured in:
+### Supported operations
 
-- `RestorantApp.DataAccess/Context/RestorantContext.cs`
+* Create order
+* Update order
+* Delete order
+* Get order by ID
+* Get all orders
 
-Default database:
-- `RestorantDB`
+### Order Filtering
 
-If needed, update the connection string to match your local SQL Server instance.
+Orders can be queried by:
 
-### Run from the Command Line
-From the solution root directory:
+* Specific date
+* Date range
+* Price range
 
-### Run in Visual Studio
+---
+
+## 💰 Automatic Order Total Calculation
+
+Order totals are calculated automatically based on the selected menu items and their quantities.
+
+The calculation follows the basic rule:
+
+```text
+Item Price × Quantity
+        ↓
+Order Item Total
+        ↓
+Sum of all Order Items
+        ↓
+Final Order Total
+```
+
+This keeps pricing logic centralized inside the appropriate application layer.
+
+---
+
+## 🕒 Automatic Order Timestamp
+
+New orders automatically receive their creation timestamp.
+
+This logic is handled inside:
+
+```text
+RestorantContext.SaveChangesAsync()
+```
+
+The application uses:
+
+```csharp
+DateTime.Now
+```
+
+to assign the timestamp to newly created orders.
+
+---
+
+# 🔄 Asynchronous Programming
+
+Database operations are implemented using **async/await**.
+
+Repositories and services use asynchronous operations such as:
+
+```text
+ToListAsync()
+FirstOrDefaultAsync()
+FindAsync()
+SaveChangesAsync()
+```
+
+This keeps database access modern and avoids unnecessary blocking operations.
+
+---
+
+# 💉 Dependency Injection
+
+The application uses:
+
+**Microsoft.Extensions.DependencyInjection**
+
+Services and repositories are registered during application startup.
+
+This allows dependencies to be injected instead of creating them manually.
+
+Example architecture:
+
+```text
+Presentation
+      ↓
+   Service
+      ↓
+ Repository
+      ↓
+  DbContext
+      ↓
+ SQL Server
+```
+
+---
+
+# 🔄 AutoMapper
+
+**AutoMapper** is used for converting between entities and DTOs.
+
+The application separates database entities from objects used by the presentation/business layers.
+
+Mappings include:
+
+```text
+Entity
+   ↕
+Create DTO
+   ↕
+Update DTO
+   ↕
+Return DTO
+```
+
+This helps keep the application structure clean and reduces manual mapping code.
+
+---
+
+# 🗄️ Database
+
+The application uses:
+
+* **SQL Server**
+* **Entity Framework Core 10**
+* **Code First approach**
+
+### Default Database
+
+```text
+RestorantDB
+```
+
+The connection string is configured inside:
+
+```text
+RestorantApp.DataAccess
+└── Context
+    └── RestorantContext.cs
+```
+
+Update the connection string if your SQL Server instance uses a different server or instance name.
+
+---
+
+# 🛠️ Tech Stack
+
+| Technology               | Usage                   |
+| ------------------------ | ----------------------- |
+| C#                       | Programming language    |
+| .NET 10                  | Application framework   |
+| Entity Framework Core 10 | ORM / database access   |
+| SQL Server               | Database                |
+| AutoMapper               | Object mapping          |
+| Dependency Injection     | Dependency management   |
+| async/await              | Asynchronous operations |
+| Repository Pattern       | Data access abstraction |
+
+---
+
+# 📁 Solution Structure
+
+```text
+RestorantApp
+│
+├── RestorantApp.Presentation
+│   ├── Program.cs
+│   └── ...
+│
+├── RestorantApp.Businnes
+│   ├── DTOs
+│   ├── Services
+│   ├── Profiles
+│   └── ...
+│
+├── RestorantApp.DataAccess
+│   ├── Context
+│   ├── Repositories
+│   ├── Configurations
+│   └── ...
+│
+├── RestorantApp.Entity
+│   ├── Entities
+│   ├── Enums
+│   └── ...
+│
+└── RestorantApp.slnx
+```
+
+---
+
+# ⚙️ Getting Started
+
+## Prerequisites
+
+Make sure you have the following installed:
+
+* [.NET 10 SDK](https://dotnet.microsoft.com/)
+* SQL Server Express or another compatible SQL Server instance
+* Visual Studio 2026 or another compatible .NET IDE
+* EF Core CLI tools *(optional, for migrations)*
+
+---
+
+## 📥 Clone the Repository
+
+```bash
+git clone https://github.com/your-username/your-repository.git
+
+cd your-repository
+```
+
+Replace the repository URL with the actual GitHub repository URL.
+
+---
+
+## 🗄️ Configure the Database
+
+Open:
+
+```text
+RestorantApp.DataAccess/Context/RestorantContext.cs
+```
+
+and update the connection string according to your local SQL Server configuration.
+
+Example:
+
+```text
+Server=YOUR_SERVER;
+Database=RestorantDB;
+Trusted_Connection=True;
+TrustServerCertificate=True;
+```
+
+---
+
+## 🧱 Apply Migrations
+
+If migrations are already included in the repository, update the database using:
+
+```bash
+dotnet ef database update
+```
+
+If EF Core tools are not installed:
+
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+---
+
+## ▶️ Run the Application
+
+### Using Visual Studio
+
 1. Open `RestorantApp.slnx`
 2. Set `RestorantApp.Presentation` as the startup project
-3. Press **F5** or **Ctrl+F5**
+3. Press **F5** or **Ctrl + F5**
 
-### Optional: EF Core Tools
-If you are working with migrations, you can manage them using `dotnet ef` commands after installing the EF Core tooling.
+### Using CLI
+
+From the solution root:
+
+```bash
+dotnet run --project RestorantApp.Presentation
+```
+
+---
+
+# 🧪 Example Application Flow
+
+When the application starts, the user can interact with the console menu:
+
+```text
+--- RESTAURANT MANAGEMENT SYSTEM ---
+
+1. Menu Item Management
+2. Order Management
+0. Exit
+
+Select an option:
+```
+
+Menu item operations include:
+
+```text
+--- MENU ITEM MANAGEMENT ---
+
+1. Add Menu Item
+2. Update Menu Item
+3. Delete Menu Item
+4. Get All Menu Items
+5. Search by Category
+6. Search by Price Range
+7. Search by Name
+0. Back
+```
 
 ---
 
-## Solution Overview
+# 🎯 Project Goals
+
+This project was built to practice and demonstrate:
+
+* N-Tier Architecture
+* Separation of Concerns
+* SOLID principles
+* Dependency Injection
+* Repository Pattern
+* Entity Framework Core
+* DTO pattern
+* AutoMapper
+* LINQ
+* Async/Await
+* Database relationships
+* CRUD operations
+* Business logic organization
+* Clean and maintainable project structure
 
 ---
 
-## Notes
+# 🔮 Future Improvements
 
-- The application is designed for learning and practical use of layered architecture in .NET.
-- Business rules such as order total calculation and automatic order timestamps are centralized in the appropriate layers.
-- The structure makes the project easy to extend with additional features such as authentication, reporting, and more advanced filtering.
+Possible future extensions include:
+
+* 🔐 Authentication & Authorization
+* 👤 User management
+* 📊 Sales and revenue reporting
+* 📈 Dashboard
+* 🧾 Receipt generation
+* 🔍 More advanced filtering
+* 📦 Inventory management
+* 💳 Payment integration
+* 🌐 ASP.NET Core Web API
+* 🖥️ Web-based frontend
+* 📝 Logging and centralized exception handling
 
 ---
+
+# 📚 Purpose
+
+This project was created primarily for **learning and practical implementation of .NET architecture patterns**.
+
+Rather than putting all application logic into a single console project, responsibilities are separated into dedicated layers. This makes the application easier to understand, maintain, test, and extend.
+
+---
+
+## 👨‍💻 Author
+
+**Vuqar**
+
+Built with **C# & .NET** ❤️
+
+---
+
+⭐ If you find this project useful, feel free to star the repository!

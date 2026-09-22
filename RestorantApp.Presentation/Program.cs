@@ -53,10 +53,11 @@ namespace RestorantApp.Presentation
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("=== RESTORAN İDARƏETMƏ SİSTEMİ ===");
-                Console.WriteLine("1. Menyu üzərində əməliyyat aparmaq");
-                Console.WriteLine("2. Sifarişlər üzərində əməliyyat aparmaq");
-                Console.WriteLine("0. Sistemdən çıxmaq");
+                Console.WriteLine("========= RESTORAN İDARƏETMƏ SİSTEMİ ==========");
+                Console.WriteLine("= 1. Menyu üzərində əməliyyat aparmaq         =");
+                Console.WriteLine("= 2. Sifarişlər üzərində əməliyyat aparmaq    =");
+                Console.WriteLine("= 0. Sistemdən çıxmaq                         =");
+                Console.WriteLine("===============================================");
                 Console.Write("Seçiminizi edin: ");
 
                 string choice = Console.ReadLine()!;
@@ -85,16 +86,18 @@ namespace RestorantApp.Presentation
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("--- MENYU ƏMƏLİYYATLARI ---");
-                Console.WriteLine("1. Yeni item əlavə et");
-                Console.WriteLine("2. İtem üzərində düzəliş et");
-                Console.WriteLine("3. İtem sil");
-                Console.WriteLine("4. Bütün item-ları göstər");
-                Console.WriteLine("5. Kateqoriyasına görə menu item-ları göstər");
-                Console.WriteLine("6. Qiymət aralığına görə menu item-ları göstər");
-                Console.WriteLine("7. Ada görə axtarış et (Search)");
-                Console.WriteLine("8. ID görə axtarış et (Search)");
-                Console.WriteLine("0. Ana menyuya qayıt");
+                Console.WriteLine("--------- MENYU ƏMƏLİYYATLARI ----------");
+                Console.WriteLine("- 1. Yeni item əlavə et                -");
+                Console.WriteLine("- 2. İtem üzərində düzəliş et          -");
+                Console.WriteLine("- 3. İtem sil                          -");
+                Console.WriteLine("- 4. Bütün item-ları göstər            -");
+                Console.WriteLine("- 5. Kateqoriyasına görə item göstər   -");
+                Console.WriteLine("- 6. Qiymət aralığına görə item göstər -");
+                Console.WriteLine("-------------- AXTARIŞ -----------------");
+                Console.WriteLine("- 7. Ada görə axtarış et (Search)      -");
+                Console.WriteLine("- 8. ID görə axtarış et (Search)       -");
+                Console.WriteLine("- 0. Ana menyuya qayıt                 -");
+                Console.WriteLine("----------------------------------------");
                 Console.Write("Seçiminizi edin: ");
 
                 string choice = Console.ReadLine()!;
@@ -270,15 +273,16 @@ namespace RestorantApp.Presentation
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("--- SİFARİŞ MENYUSU ---");
-                Console.WriteLine("1. Yeni sifariş əlavə et");
-                Console.WriteLine("2. Sifarişi ləğv et");
-                Console.WriteLine("3. Bütün sifarişlərə bax");
-                Console.WriteLine("4. Tarix aralığına görə göstər");
-                Console.WriteLine("5. Məbləğ aralığına görə göstər");
-                Console.WriteLine("6. Verilmiş tarixdə olan sifarişlər");
-                Console.WriteLine("7. ID-yə görə sifariş detalı");
-                Console.WriteLine("0. Ana menyuya qayıt");
+                Console.WriteLine("-------------- SİFARİŞ -----------------");
+                Console.WriteLine("- 1. Yeni sifariş əlavə et             -");
+                Console.WriteLine("- 2. Sifarişi ləğv et                  -");
+                Console.WriteLine("- 3. Bütün sifarişlərə bax             -");
+                Console.WriteLine("- 4. Tarix aralığına görə göstər       -");
+                Console.WriteLine("- 5. Məbləğ aralığına görə göstər      -");
+                Console.WriteLine("- 6. Verilmiş tarixdə olan sifarişlər  -");
+                Console.WriteLine("- 7. ID-yə görə sifariş detalı         -");
+                Console.WriteLine("- 0. Ana menyuya qayıt                 -");
+                Console.WriteLine("----------------------------------------");
                 Console.Write("Seçiminizi edin: ");
 
                 string choice = Console.ReadLine()!;
