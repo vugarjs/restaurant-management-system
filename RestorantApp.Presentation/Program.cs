@@ -22,11 +22,10 @@ namespace RestorantApp.Presentation
             var services = new ServiceCollection();
             services.AddDbContext<RestorantContext>();
 
-            // Menu Item qeydiyyatları
             services.AddScoped<IMenuItemRepository, MenuItemRepository>();
             services.AddScoped<IMenuItemService, MenuItemService>();
 
-            // Order qeydiyyatları
+
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderService, OrderService>();
 
@@ -200,7 +199,6 @@ namespace RestorantApp.Presentation
 
                             if (Enum.TryParse(typeof(Category), catInput, true, out var parsedCat))
                             {
-                                // Enum tipini birbaşa servisə ötürürük
                                 var catItems = await menuItemService.GetMenuItemsByCategoryAsync((Category)parsedCat);
 
                                 foreach (var i in catItems)

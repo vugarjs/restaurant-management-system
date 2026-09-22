@@ -20,7 +20,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
         return await _orderRepository.GetAllAsync(
             predicate: o => o.Date >= startDate && o.Date < endDate,
-            include: query => query.Include(o => o.OrderItems) // <--- Budur!
+            include: query => query.Include(o => o.OrderItems)
         );
     }
 
