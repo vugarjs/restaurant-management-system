@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RestorantApp.Entity.Entities;
+using RestorantApp.Entity.Entities.Common;
 
 namespace RestorantApp.DataAccess.Context;
 
@@ -22,12 +23,21 @@ public class RestorantContext : DbContext
     }
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
-        var entries = ChangeTracker.Entries<Order>()
+        var entries = ChangeTracker.Entries<AuditAble>()
                         .Where(e => e.State == EntityState.Added);
 
-        foreach (var entry in entries)
+
+        foreach (var item in entries)
         {
-            entry.Entity.Date = DateTime.Now;
+            switch (item.State)
+            {
+                case EntityState.Added:
+                    item.Entity.CreatedAt = DateTime.UtcNow;
+                    break;
+                case EntityState.Modified:
+                    item.Entity.UpdatedAt = DateTime.UtcNow;
+                    break;
+            }
         }
 
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);

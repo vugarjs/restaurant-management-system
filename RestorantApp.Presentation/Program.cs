@@ -9,7 +9,9 @@ using RestorantApp.Businnes.Services.Interfaces;
 using RestorantApp.DataAccess.Context;
 using RestorantApp.DataAccess.Repositories.Implementations;
 using RestorantApp.DataAccess.Repositories.Interfaces;
+using RestorantApp.Entity.Entities;
 using RestorantApp.Entity.Enums;
+using RestorantApp.Presentation.HelperMethods;
 using System.Text;
 
 namespace RestorantApp.Presentation
@@ -37,9 +39,11 @@ namespace RestorantApp.Presentation
             services.AddMemoryCache(); // caching üçün əlavə olunur
 
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<MenuHelpers>();
 
             var provider = services.BuildServiceProvider();
             var mapper = provider.GetRequiredService<IMapper>();
+            var helper = provider.GetRequiredService<MenuHelpers>();
 
 
 
@@ -65,10 +69,10 @@ namespace RestorantApp.Presentation
                 switch (choice)
                 {
                     case "1":
-                        await MenuItemMenu(menuItemService, mapper);
+                        await MenuItemMenu(menuItemService, mapper, helper);
                         break;
                     case "2":
-                        await OrderMenu(orderService, mapper);
+                        await OrderMenu(orderService, mapper, menuItemService);
                         break;
                     case "0":
                         Console.WriteLine("Proqramdan çıxılır...");
@@ -81,7 +85,7 @@ namespace RestorantApp.Presentation
             }
         }
 
-        static async Task MenuItemMenu(IMenuItemService menuItemService, IMapper mapper)
+        static async Task MenuItemMenu(IMenuItemService menuItemService, IMapper mapper, MenuHelpers helper)
         {
             while (true)
             {
@@ -119,27 +123,7 @@ namespace RestorantApp.Presentation
 
                             Console.Write("Seçim (rəqəm və ya ad): ");
                             string categoryInput = Console.ReadLine()!;
-
-                            if (Enum.TryParse(typeof(Category), categoryInput, true, out var parsedCategory))
-                            {
-                                var newDto = new MenuItemCreateDto
-                                {
-                                    Name = name,
-                                    Price = price,
-                                    Category = (Category)parsedCategory
-                                };
-
-
-                                await menuItemService.AddMenuItemAsync(newDto);
-                                await menuItemService.SaveChangesAsync();
-
-                                Console.WriteLine("Menyu elementi uğurla əlavə edildi!");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Yanlış kateqoriya daxil edildi!");
-
-                            }
+                            await helper.AddMenuItem(name, price, categoryInput);
                             break;
 
                         case "2":
@@ -161,6 +145,15 @@ namespace RestorantApp.Presentation
 
                                 var updateDto = mapper.Map<MenuItemUpdateDto>(item);
 
+                                if(string.IsNullOrWhiteSpace(updateDto.Name) || updateDto.Price <= 0)
+                                {
+                                    Console.WriteLine("Məhsul adı boş ola bilməz və qiymət sıfırdan böyük olmalıdır!");
+                                    break;
+                                }
+                                if(newName == menuItemService.GetMenuItemsByNameAsync(item.Name).Result.FirstOrDefault()?.Name)
+                                {
+                                    throw new Exception("Bu adda məhsul artıq mövcuddur!");
+                                }
                                 await menuItemService.EditMenuItem(upid, updateDto);
                                 await menuItemService.SaveChangesAsync();
 
@@ -175,8 +168,19 @@ namespace RestorantApp.Presentation
 
                             break;
                         case "3":
+                            Console.WriteLine("\n--- Mövcud Məhsullar ---");
+                            foreach (var iteqm in await menuItemService.GetAllMenuItemsAsync())
+                            {
+                                Console.WriteLine($"ID: {iteqm.Id} | Ad: {iteqm.Name} | Qiymət: {iteqm.Price} AZN");
+                            }
                             Console.Write("Silinəcək Məhsulun ID-si: ");
                             var deleteId = int.Parse(Console.ReadLine()!);
+                            var itemss = await menuItemService.GetAllMenuItemsAsync();
+
+                            if (await menuItemService.GetMenuItemByIdAsync(deleteId) == null)
+                            {
+                                throw new Exception("Bu ID-də məhsul tapılmadı!");
+                            }
 
                             menuItemService.RemoveMenuItem(deleteId);
                             await menuItemService.SaveChangesAsync();
@@ -184,8 +188,9 @@ namespace RestorantApp.Presentation
                             break;
 
                         case "4":
-                            Console.WriteLine("--- Bütün Menyu Elementləri ---");
+                           
                             var items = await menuItemService.GetAllMenuItemsAsync();
+                            Console.WriteLine("--- Bütün Menyu Elementləri ---");
                             foreach (var i in items)
                             {
                                 Console.WriteLine($"ID {i.Id} | Ad: {i.Name} | Kateqoriya: {i.Category} | Qiymət: {i.Price} AZN");
@@ -195,23 +200,30 @@ namespace RestorantApp.Presentation
                         case "5":
                             Console.WriteLine("Kateqoriyanı seçin:");
                             foreach (var cat in Enum.GetValues(typeof(Category)))
-                                Console.WriteLine($"{(int)cat} - {cat}");
+                                Console.WriteLine($"{cat}");
 
-                            Console.Write("Seçim (rəqəm və ya ad): ");
+                            Console.Write("Seçim ad : ");
                             string catInput = Console.ReadLine()!;
 
                             if (Enum.TryParse(typeof(Category), catInput, true, out var parsedCat))
                             {
                                 var catItems = await menuItemService.GetMenuItemsByCategoryAsync((Category)parsedCat);
 
-                                foreach (var i in catItems)
+                                if (!catItems.Any())
                                 {
-                                    Console.WriteLine($"Ad: {i.Name} | Qiymət: {i.Price} AZN");
+                                    throw new Exception("Bu kateqoriyada məhsul tapılmadı!");
+                                }
+                                else
+                                {
+                                    foreach (var i in catItems)
+                                    {
+                                        Console.WriteLine($"Ad: {i.Name} | Qiymət: {i.Price} AZN");
+                                    }
                                 }
                             }
                             else
                             {
-                                Console.WriteLine("Yanlış kateqoriya daxil edildi!");
+                                throw new Exception("Yanlış kateqoriya daxil edildi!");
                             }
                             break;
 
@@ -221,6 +233,10 @@ namespace RestorantApp.Presentation
                             Console.Write("Maksimum qiymət: ");
                             decimal.TryParse(Console.ReadLine(), out decimal maxPrice);
                             var rangeItems = await menuItemService.GetMenuItemsByPriceRangeAsync(minPrice, maxPrice);
+                            if(!rangeItems.Any())
+                            {
+                                Console.WriteLine("Bu qiymət aralığında məhsul tapılmadı.");
+                            }
                             foreach (var i in rangeItems)
                             {
                                 Console.WriteLine($" Ad: {i.Name} | Qiymət: {i.Price} AZN");
@@ -231,6 +247,14 @@ namespace RestorantApp.Presentation
                             Console.Write("Axtarış sözü: ");
                             string searchText = Console.ReadLine()!;
                             var searchItems = await menuItemService.GetMenuItemsByNameAsync(searchText);
+                            if(!searchItems.Any())
+                            {
+                                Console.WriteLine("Bu axtarış sözünə uyğun məhsul tapılmadı.");
+                            }
+                            if(searchText.Length < 3)
+                            {
+                                throw new Exception("Axtarış sözü ən azı 3 simvol olmalıdır!");
+                            }
                             foreach (var i in searchItems)
                             {
                                 Console.WriteLine($"Ad: {i.Name} | Qiymət: {i.Price} AZN");
@@ -247,7 +271,7 @@ namespace RestorantApp.Presentation
                             }
                             else
                             {
-                                Console.WriteLine("İstənilən ID ilə item tapılmadı.");
+                                throw new Exception("İstənilən ID ilə item tapılmadı.");
                             }
                             break;
 
@@ -259,16 +283,16 @@ namespace RestorantApp.Presentation
                             break;
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    Console.WriteLine($"XƏTA: Bash verdi zehmet olmasa admine muraciet edin.");
+                    Console.WriteLine($"XƏTA: {ex.Message}");
                 }
 
                 Console.WriteLine("\nDavam etmək üçün hər hansı bir düyməyə basın...");
                 Console.ReadKey();
             }
         }
-        static async Task OrderMenu(IOrderService orderService, IMapper mapper)
+        static async Task OrderMenu(IOrderService orderService, IMapper mapper, IMenuItemService menuItemService)
         {
             while (true)
             {
@@ -296,7 +320,13 @@ namespace RestorantApp.Presentation
                             var orderCreateDto = new OrderCreateDto();
 
                             while (true)
-                            {
+                            {   
+                                Console.WriteLine("\n--- Mövcud Məhsullar ---");
+                                foreach (var item in await menuItemService.GetAllMenuItemsAsync())
+                                {
+                                    Console.WriteLine($"ID: {item.Id} | Ad: {item.Name} | Qiymət: {item.Price} AZN");
+                                }
+                                Console.WriteLine("------------------------");
                                 Console.Write("Sifariş veriləcək Məhsulun ID-si (Bitirmək üçün 0 yazın): ");
 
                                 if (!int.TryParse(Console.ReadLine(), out int menuItemId) || menuItemId == 0)
@@ -335,6 +365,13 @@ namespace RestorantApp.Presentation
                             break;
 
                         case "2":
+                            Console.WriteLine("\n--- Mövcud Sifarişlər ---");
+
+                            foreach (var item in await orderService.GetAllOrdersAsync())
+                            {
+                                Console.WriteLine($"ID: {item.Id} | Tarix: {item.Date} | Məbləğ: {item.TotalAmount} AZN");
+                            }
+
                             Console.Write("Ləğv ediləcək Sifarişin ID-si: ");
                             if (int.TryParse(Console.ReadLine(), out int deleteId))
                             {
@@ -360,10 +397,16 @@ namespace RestorantApp.Presentation
                             Console.Write("Son tarix (YYYY-MM-DD): ");
                             DateTime.TryParse(Console.ReadLine(), out DateTime endDate);
                             var dateOrders = await orderService.GetOrdersByDatesInterval(startDate, endDate);
+
+                            if(!dateOrders.Any())
+                            {
+                                Console.WriteLine("Bu tarix aralığında sifariş tapılmadı.");
+                            }
                             foreach (var o in dateOrders)
                             {
                                 Console.WriteLine($"ID: {o.Id} | Tarix: {o.Date} | Məbləğ: {o.TotalAmount} AZN");
                             }
+
                             break;
 
                         case "5":
@@ -372,6 +415,10 @@ namespace RestorantApp.Presentation
                             Console.Write("Max məbləğ: ");
                             decimal.TryParse(Console.ReadLine(), out decimal maxAmount);
                             var amountOrders = await orderService.GetOrdersByPriceInterval(minAmount, maxAmount);
+                            if(!amountOrders.Any())
+                            {
+                                Console.WriteLine("Bu məbləğ aralığında sifariş tapılmadı.");
+                            }
                             foreach (var o in amountOrders)
                             {
                                 Console.WriteLine($"ID: {o.Id} | Tarix: {o.Date} | Məbləğ: {o.TotalAmount} AZN");
@@ -403,6 +450,12 @@ namespace RestorantApp.Presentation
                             break;
 
                         case "7":
+                            Console.WriteLine("\n--- Mövcud Sifarişlər ---");
+
+                            foreach (var item in await orderService.GetAllOrdersAsync())
+                            {
+                                Console.WriteLine($"ID: {item.Id} | Tarix: {item.Date} | Məbləğ: {item.TotalAmount} AZN");
+                            }
                             Console.WriteLine("ID Daxil edin: ");
                             if (int.TryParse(Console.ReadLine(), out int orderId))
                             {
