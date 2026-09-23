@@ -9,4 +9,7 @@
     <Project Path="RestorantApp.Entity/RestorantApp.Entity.csproj" />
     <Project Path="RestorantApp.Presentation/RestorantApp.Presentation.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="Test/Test.csproj" Id="235cb183-c029-4eb6-a661-47ad0a45666a" />
+  </Folder>
 </Solution>
