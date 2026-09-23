@@ -12,6 +12,7 @@ public class MapperProfile : Profile
     {
         // MenuItem
         CreateMap<MenuItemCreateDto, MenuItem>();
+        CreateMap<MenuItem, MenuItemCreateDto>();
         CreateMap<MenuItem, MenuItemReturnDto>();
         CreateMap<MenuItemUpdateDto, MenuItem>();
         CreateMap<MenuItemReturnDto, MenuItem>();
