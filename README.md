@@ -368,9 +368,9 @@ Make sure you have the following installed:
 ## 📥 Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/vugarjs/restaurant-management-system.git
 
-cd your-repository
+cd restaurant-management-system
 ```
 
 Replace the repository URL with the actual GitHub repository URL.
